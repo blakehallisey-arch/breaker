@@ -1,0 +1,75 @@
+A real SPIN trip. Captured by piping six PostToolUse payloads into the hook in a
+scratch project with spin_first set to 6, so the transcript fits on a page. The
+default is 60.
+
+  $ for i in 1 2 3 4 5; do
+  >   echo "$PAYLOAD" | python3 -m breaker; echo "call $i -> exit $?"
+  > done
+  call 1 -> exit 0
+  call 2 -> exit 0
+  call 3 -> exit 0
+  call 4 -> exit 0
+  call 5 -> exit 0
+
+  $ echo "$PAYLOAD" | python3 -m breaker; echo "exit $?"
+  BREAKER -- stop and look up.
+
+  You are 6 tool calls into a single instruction from the user.
+
+  Do not run another tool until you have answered these, in your head:
+    1. What did the user actually ask for, in their words?
+    2. What are you doing right now?
+    3. Is 2 still inside 1, or did the job quietly get bigger?
+    4. Is this approach working, or are you going in circles?
+
+  Then say ONE of these in a sentence before you continue:
+    CONTINUE -- still on the ask; here is what is left.
+    PIVOT    -- this is not working; here is the different approach.
+    TRIM     -- I grew the job past the ask; cutting back to this.
+    STOP     -- the ask is done or blocked; report and hand back.
+
+  Make the call yourself. Only hand back to the user if you genuinely cannot
+  tell what they wanted.
+  exit 2
+
+That text goes to stderr. Exit 2 is what makes Claude Code put it in front of
+the model as a hard interrupt instead of a log line.
+
+Afterwards:
+
+  $ python3 -m breaker report
+  breaker -- this turn
+    session        demo
+    tool calls     6 (next check-in at 51)
+    files touched  1
+    most rewritten rank.py (6x)
+    tripped        spin
+
+SPIN is now spent for this turn and re-armed at call 51 (6 + spin_recheck 45),
+so a genuinely long job checks in a few times rather than every other call.
+
+The NEW FILE trip, from the same session, on a Write that creates a root-level
+source file:
+
+  $ echo "$WRITE_PAYLOAD" | python3 -m breaker; echo "exit $?"
+  BREAKER -- you are creating something new.
+
+  This call creates a new file at the project root: rank_items.py.
+
+  The other breakers ask whether you are doing too much. This one asks whether
+  this should exist. Answer these three in writing before you write anything else:
+    1. Which existing file already owns this DATA? Name it, or say none.
+    2. Which existing file already owns this DECISION? Name it, or say none.
+    3. If either exists, why is folding into it the wrong move?
+
+  Then say ONE of these:
+    FOLD  -- an owner exists; I am putting it there instead.
+    BUILD -- nothing owns this, and here is the one line saying why.
+    STOP  -- the user asked a question, not for a build. Answer the question.
+
+  Question 2 is the one that matters. A duplicate is almost never caught by
+  noticing the new file is bad; it is caught by naming the file that already
+  made this decision and reading what it decided.
+
+  Make the call yourself. Do not ask the user for permission to keep going.
+  exit 2

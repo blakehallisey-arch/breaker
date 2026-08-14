@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+
+  "spin_first": 60,
+  "spin_recheck": 45,
+
+  "file_spread": 14,
+  "same_file_loop": 10,
+
+  "new_file_extensions": [".py", ".js", ".ts", ".html", ".go", ".rs"],
+  "root_only": true,
+
+  "registry_files": [
+    "registry.json",
+    "config/*.registry.json"
+  ],
+
+  "ignore_paths": [
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/*.lock"
+  ]
+}
